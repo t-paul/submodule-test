@@ -93,7 +93,7 @@ jobs:
           commit-message: "chore(submodule): Update ${{ env.SUBMODULE_NAME }} to ${{ steps.compare-releases.outputs.release_tag }}"
           title: "chore(submodule): Update ${{ env.SUBMODULE_NAME }} to ${{ steps.compare-releases.outputs.release_tag }}"
           body: |
-            This PR updates the submodule `${{ env.SUBMODULE_NAME }}` to the latest release tag: `${{ steps.compare-releases.outputs.release_tag }}`.
+            This PR updates the submodule `${{ env.SUBMODULE_NAME }}` from `${{ steps.get-current-submodule.outputs.current_commit }}` to the latest release tag: `${{ steps.compare-releases.outputs.release_tag }}`.
             - **Upstream Release**: https://github.com/elalish/manifold/releases/tag/${{ steps.compare-releases.outputs.release_tag }}
           branch: "chore/update-manifold-${{ steps.compare-releases.outputs.release_tag }}"
           labels: |
