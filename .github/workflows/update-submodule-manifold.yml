@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
-        with:
-          submodules: recursive
 
       - name: Get latest upstream release
         id: get-latest-release
@@ -39,6 +37,7 @@ jobs:
       - name: Get current submodule commit
         id: get-current-submodule
         run: |
+          git submodule update --init --recursive --remote "$SUBMODULE_PATH"
           CURRENT_COMMIT=$(git submodule status "$SUBMODULE_PATH" | awk '{print $1}' | tr -d '-')
           echo "current_commit=$CURRENT_COMMIT" >> $GITHUB_OUTPUT
 
@@ -83,9 +82,6 @@ jobs:
         run: |
           set -x
           git submodule status
-          git -C "$SUBMODULE_PATH" log -n8 --oneline
-          git -C "$SUBMODULE_PATH" fetch --all
-          git -C "$SUBMODULE_PATH" reset --hard origin/master
           git -C "$SUBMODULE_PATH" log -n8 --oneline
           git -C "$SUBMODULE_PATH" checkout "${{ steps.compare-releases.outputs.release_tag }}"
           git -C "$SUBMODULE_PATH" log -n8 --oneline
