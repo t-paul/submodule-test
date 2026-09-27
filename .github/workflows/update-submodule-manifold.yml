@@ -61,7 +61,7 @@ jobs:
             --json number \
             --jq .[].number \
             --state all \
-            --label dependencies
+            --label dependencies \
             --search "in:title Update $SUBMODULE_NAME to $RELEASE_TAG")
           if [ -n "$EXISTING_PR" ]; then
             echo "Existing PR found: #$EXISTING_PR"
