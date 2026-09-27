@@ -8,6 +8,8 @@ on:
 jobs:
   check-and-update-submodule:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -89,9 +91,6 @@ jobs:
             This PR updates the submodule `Manifold` to the latest release tag: `${{ steps.compare-releases.outputs.release_tag }}`.
             - **Upstream Release**: https://github.com/elalish/manifold/releases/tag/${{ steps.compare-releases.outputs.release_tag }}
           branch: "chore/update-manifold-${{ steps.compare-releases.outputs.release_tag }}"
-          #labels: |
-          #  dependencies
-          #  submodule
-          #assignees: |
-          #  ${{ github.actor }}
-
+          labels: |
+            dependencies
+            "Tag: Manifold"
