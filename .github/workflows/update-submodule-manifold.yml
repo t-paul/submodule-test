@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -73,15 +73,15 @@ jobs:
           MODULE_NAME="Manifold"
           SUBMODULE_PATH="submodules/manifold"
           git submodule update --remote "$SUBMODULE_PATH"
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add "$SUBMODULE_PATH"
-          git commit -m "chore(submodule): Update $MODULE_NAME to $RELEASE_TAG"
-          git push
+          #git config --global user.name "github-actions[bot]"
+          #git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          #git add "$SUBMODULE_PATH"
+          #git commit -m "chore(submodule): Update $MODULE_NAME to $RELEASE_TAG"
+          #git push
 
       - name: Create Pull Request
         if: steps.compare-releases.outputs.new_release_available == 'true' && steps.check-existing-pr.outputs.existing_pr == ''
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore(submodule): Update Manifold to ${{ steps.compare-releases.outputs.release_tag }}"
