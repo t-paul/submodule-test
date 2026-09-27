@@ -1,0 +1,97 @@
+name: Update Manifold
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-and-update-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Get latest upstream release
+        id: get-latest-release
+        run: |
+          UPSTREAM_REPO="elalish/manifold"
+          LATEST_RELEASE=$(gh release view --json tagName -q '.tagName' -R "$UPSTREAM_REPO")
+          echo "latest_release=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current submodule commit
+        id: get-current-submodule
+        run: |
+          SUBMODULE_PATH="submodules/manifold"
+          CURRENT_COMMIT=$(git submodule status "$SUBMODULE_PATH" | awk '{print $1}' | tr -d '-')
+          echo "current_commit=$CURRENT_COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Compare releases
+        id: compare-releases
+        run: |
+          LATEST_RELEASE="${{ steps.get-latest-release.outputs.latest_release }}"
+          CURRENT_COMMIT="${{ steps.get-current-submodule.outputs.current_commit }}"
+          if [ "$LATEST_RELEASE" != "$CURRENT_COMMIT" ]; then
+            echo "New release detected: $LATEST_RELEASE (current: $CURRENT_COMMIT)"
+            echo "new_release_available=true" >> $GITHUB_OUTPUT
+            echo "release_tag=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+          else
+            echo "No new release detected."
+            echo "new_release_available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for existing PR
+        id: check-existing-pr
+        if: steps.compare-releases.outputs.new_release_available == 'true'
+        run: |
+          RELEASE_TAG="${{ steps.compare-releases.outputs.release_tag }}"
+          MODULE_NAME="Manifold"
+          SUBMODULE_PATH="submodules/manifold"
+          EXISTING_PR=$(gh pr list \
+            --search "in:title Update $MODULE_NAME to $RELEASE_TAG in:body" \
+            --json number \
+            --jq '..number')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Existing PR found: #$EXISTING_PR"
+            echo "existing_pr=$EXISTING_PR" >> $GITHUB_OUTPUT
+          else
+            echo "No existing PR found."
+            echo "existing_pr=" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update submodule if new release is available and no PR exists
+        if: steps.compare-releases.outputs.new_release_available == 'true' && steps.check-existing-pr.outputs.existing_pr == ''
+        run: |
+          RELEASE_TAG="${{ steps.compare-releases.outputs.release_tag }}"
+          MODULE_NAME="Manifold"
+          SUBMODULE_PATH="submodules/manifold"
+          git submodule update --remote "$SUBMODULE_PATH"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$SUBMODULE_PATH"
+          git commit -m "chore(submodule): Update $MODULE_NAME to $RELEASE_TAG"
+          git push
+
+      - name: Create Pull Request
+        if: steps.compare-releases.outputs.new_release_available == 'true' && steps.check-existing-pr.outputs.existing_pr == ''
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(submodule): Update Manifold to ${{ steps.compare-releases.outputs.release_tag }}"
+          title: "chore(submodule): Update Manifold to ${{ steps.compare-releases.outputs.release_tag }}"
+          body: |
+            This PR updates the submodule `Manifold` to the latest release tag: `${{ steps.compare-releases.outputs.release_tag }}`.
+            - **Upstream Release**: https://github.com/elalish/manifold/releases/tag/${{ steps.compare-releases.outputs.release_tag }}
+          branch: "chore/update-manifold-${{ steps.compare-releases.outputs.release_tag }}"
+          labels: |
+            dependencies
+            submodule
+          assignees: |
+            ${{ github.actor }}
+
