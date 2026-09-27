@@ -83,12 +83,12 @@ jobs:
         if: steps.compare-releases.outputs.new_release_available == 'true' && steps.check-existing-pr.outputs.existing_pr == ''
         uses: peter-evans/create-pull-request@v8
         with:
-          commit-message: "chore(submodule): Update $SUBMODULE_NAME to ${{ steps.compare-releases.outputs.release_tag }}"
-          title: "chore(submodule): Update $SUBMODULE_NAME to ${{ steps.compare-releases.outputs.release_tag }}"
+          commit-message: "chore(submodule): Update ${{ env.SUBMODULE_NAME }} to ${{ steps.compare-releases.outputs.release_tag }}"
+          title: "chore(submodule): Update ${{ env.SUBMODULE_NAME }} to ${{ steps.compare-releases.outputs.release_tag }}"
           body: |
-            This PR updates the submodule `$SUBMODULE_NAME` to the latest release tag: `${{ steps.compare-releases.outputs.release_tag }}`.
+            This PR updates the submodule `${{ env.SUBMODULE_NAME }}` to the latest release tag: `${{ steps.compare-releases.outputs.release_tag }}`.
             - **Upstream Release**: https://github.com/elalish/manifold/releases/tag/${{ steps.compare-releases.outputs.release_tag }}
           branch: "chore/update-manifold-${{ steps.compare-releases.outputs.release_tag }}"
           labels: |
             dependencies
-            "Tag: $SUBMODULE_NAME"
+            "Tag: ${{ env.SUBMODULE_NAME }}"
