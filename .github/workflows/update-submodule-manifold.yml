@@ -52,9 +52,10 @@ jobs:
           MODULE_NAME="Manifold"
           SUBMODULE_PATH="submodules/manifold"
           EXISTING_PR=$(gh pr list \
-            --search "in:title Update $MODULE_NAME to $RELEASE_TAG in:body" \
+            -L1 \
             --json number \
-            --jq '..number')
+            --jq .[].number \
+            --search "in:title Update $MODULE_NAME to $RELEASE_TAG")
           if [ -n "$EXISTING_PR" ]; then
             echo "Existing PR found: #$EXISTING_PR"
             echo "existing_pr=$EXISTING_PR" >> $GITHUB_OUTPUT
